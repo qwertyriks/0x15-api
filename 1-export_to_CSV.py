@@ -1,24 +1,35 @@
 #!/usr/bin/python3
-"""Exports data in the CSV format"""
+"""
+Retrieves to-do list details for a specific employee ID.
+
+This script accepts an employee ID as a command-line input,
+retrieves the associated user data and to-do list from the
+JSONPlaceholder API, and displays the tasks completed by the
+employee.
+"""
+import requests
+import sys
+
 
 if __name__ == "__main__":
+    # This is the Base URL for the JSONPlaceholder API
+    url = "https://jsonplaceholder.typicode.com/"
 
-    import csv
-    import requests
-    import sys
+    # This gets the employee information using the provided employee ID
+    employee_id = sys.argv[1]
+    user = requests.get(url + "users/{}".format(employee_id)).json()
 
-    userId = sys.argv[1]
-    user = requests.get("https://jsonplaceholder.typicode.com/users/{}"
-                        .format(userId))
-    name = user.json().get('username')
-    todos = requests.get('https://jsonplaceholder.typicode.com/todos')
+    # This gets the to-do list for the employee using the provided employee ID
+    params = {"userId": employee_id}
+    todos = requests.get(url + "todos", params).json()
 
-    filename = userId + '.csv'
-    with open(filename, mode='w') as f:
-        writer = csv.writer(f, delimiter=',', quotechar='"',
-                            quoting=csv.QUOTE_ALL, lineterminator='\n')
-        for task in todos.json():
-            if task.get('userId') == int(userId):
-                writer.writerow([userId, name, str(task.get('completed')),
-                                 task.get('title')])
+    # This filters completed tasks and count them
+    completed = [t.get("title") for t in todos if t.get("completed") is True]
+
+    # Thisprints the employee's name and the number of completed tasks
+    print("Employee {} is done with tasks({}/{}):".format(
+        user.get("name"), len(completed), len(todos)))
+
+    # Print the completed tasks one by one with indentation
+    [print("\t {}".format(complete)) for complete in completed]
                                  
